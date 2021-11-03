@@ -1,5 +1,41 @@
 {% extends "network/layout.html" %}
+{% load static %}
 
 {% block body %}
-    TODO
+{% if msg %}
+<h5 class="text-danger">{{msg}}</h5>
+{% endif %}
+
+<form class="mt-2 mb-4" action="{% url 'index' %}" method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <textarea autofocus class="form-control" type="text" name="content" placeholder="Content"></textarea>
+    </div>
+    <button class="btn btn-primary" type="submit">
+        Create
+    </button>
+</form>
+{% if tweets %}
+{% for tweet in tweets %}
+<div class="border p-2 mt-2" data-id="{{tweet.id}}">
+    <h3>Created By {{tweet.user.username}}</h3>
+    <p>
+        {{tweet.content}}
+    </p>
+    <p class="text-secondary">Created On {{tweet.created_at}}</p>
+
+    <form class="like-btn">
+        {% csrf_token %}
+        <button type="submit" class="bg-secondary">Like</button>
+    </form>
+</div>
+{% endfor %}
+{% endif %}
+
+
+
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'network/script.js' %}"></script>
 {% endblock %}

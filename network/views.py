@@ -4,11 +4,50 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from .models import User, Tweet, Profile
 
 
 def index(request):
-    return render(request, "network/index.html")
+    tweets = Tweet.objects.all().order_by("-created_at").all()
+    try:
+        user = User.objects.get(username=request.user)
+    except:
+        user = None
+
+    if request.method == "POST":
+        content = request.POST.get("content")
+        if not user:
+            print("Not a user!")
+            return render(request, "network/index.html", {"tweets": tweets,
+                                                          "msg": "You Should Be logged in to create a post"
+                                                          })
+
+        newTweet = Tweet.objects.create(content=content, user=user)
+        newTweet.save()
+        return HttpResponseRedirect(reverse("index"))
+
+    print(tweets, user)
+    return render(request, "network/index.html", {'tweets': tweets})
+
+
+def profile(req, username):
+    return HttpResponse({"res": "Hello world! Profile page"})
+
+
+def follow(req, userid):
+    return HttpResponse({"res": "Hello world! Follow page"})
+
+
+def like(req):
+
+    if req.method == "POST" and req.user.is_authenticated:
+        tweetId = req.POST.get("tweetId")
+        user = User.objects.get(username=req.user)
+        likedTweet = Tweet.objects.get(pk=tweetId)
+        likedTweet.likes = user
+        likedTweet.save()
+        print("the tweet's id is ", tweetId)
+        return HttpResponse({"Success": "Liked Succussfully"})
 
 
 def login_view(request):
