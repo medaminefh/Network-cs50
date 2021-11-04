@@ -10,20 +10,25 @@ class Tweet(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="creator")
     content = models.TextField()
-    likes = models.ManyToManyField(User, blank=True, related_name="like")
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"This Tweet created by {self.user.username} and has {self.likes} Likes"
+        return f"Tweet N°{self.id}"
 
     def serialize(self):
         return {
             "id": self.id,
             "content": self.content,
-            "createdAt": self.created_at,
-            "likes": self.likes.count()
+            "createdAt": self.created_at
         }
+
+
+class Likes(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Like N°{self.id}"
 
 
 class Profile(models.Model):

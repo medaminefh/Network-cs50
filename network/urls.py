@@ -10,5 +10,5 @@ urlpatterns = [
     path("register", views.register, name="register"),
     path("user/<str:username>", views.profile, name="profile"),
     path("user/<int:userid>", views.follow, name="follow_unfollow"),
-    path("like", views.like, name="like"),
+    path("like/<int:tweetid>", views.like, name="like"),
 ]

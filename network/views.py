@@ -1,14 +1,19 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
-from .models import User, Tweet, Profile
+from .models import User, Tweet, Profile, Likes
 
 
 def index(request):
     tweets = Tweet.objects.all().order_by("-created_at").all()
+    likes = Likes.objects.all(
+    ) if not request.user.is_authenticated else Likes.objects.filter(user=request.user)
+
+    print(likes)
     try:
         user = User.objects.get(username=request.user)
     except:
@@ -18,16 +23,16 @@ def index(request):
         content = request.POST.get("content")
         if not user:
             print("Not a user!")
-            return render(request, "network/index.html", {"tweets": tweets,
-                                                          "msg": "You Should Be logged in to create a post"
-                                                          })
+            return render(request,
+                          "network/index.html", {"tweets": tweets,
+                                                 "msg": "You Should Be logged in to create a post"})
 
         newTweet = Tweet.objects.create(content=content, user=user)
         newTweet.save()
         return HttpResponseRedirect(reverse("index"))
 
     print(tweets, user)
-    return render(request, "network/index.html", {'tweets': tweets})
+    return render(request, "network/index.html", {'tweets': tweets, "likes": likes})
 
 
 def profile(req, username):
@@ -38,16 +43,27 @@ def follow(req, userid):
     return HttpResponse({"res": "Hello world! Follow page"})
 
 
-def like(req):
+def like(req, tweetid):
 
-    if req.method == "POST" and req.user.is_authenticated:
-        tweetId = req.POST.get("tweetId")
-        user = User.objects.get(username=req.user)
-        likedTweet = Tweet.objects.get(pk=tweetId)
-        likedTweet.likes = user
-        likedTweet.save()
-        print("the tweet's id is ", tweetId)
-        return HttpResponse({"Success": "Liked Succussfully"})
+    if req.user.is_authenticated:
+        tweet = Tweet.objects.get(pk=tweetid)
+        user = User.objects.get(username=req.user.username)
+
+        try:
+            tweetLiked = Likes.objects.get(tweet=tweet, user=user)
+        except:
+            tweetLiked = None
+
+        if tweetLiked:
+            tweetLiked.delete()
+            return JsonResponse({"Success": "Disliked"}, status=200)
+
+        tweetLiked = Likes.objects.create(user=user, tweet=tweet)
+        tweetLiked.save()
+
+        return JsonResponse({"Success": "Liked Succussfully"}, status=200)
+
+    return JsonResponse({"error": "You're Not Logged In!"}, status=400)
 
 
 def login_view(request):
