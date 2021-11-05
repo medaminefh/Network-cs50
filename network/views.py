@@ -3,21 +3,33 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from django.contrib.auth.decorators import login_required
 
 from .models import User, Tweet, Profile, Likes
 
 
 def index(request):
     tweets = Tweet.objects.all().order_by("-created_at").all()
-    likes = Likes.objects.all(
-    ) if not request.user.is_authenticated else Likes.objects.filter(user=request.user)
+    likes = Likes.objects.all()
 
     print(likes)
     try:
         user = User.objects.get(username=request.user)
     except:
         user = None
+
+    output = []
+
+    for tweet in tweets:
+        liked = ""
+        try:
+            liked = likes.get(user=user, tweet=tweet)
+        except:
+            liked = None
+        output.append({
+            "tweet": tweet,
+            "likes": likes.filter(tweet=tweet).count(),
+            "isLiked": True if liked else False
+        })
 
     if request.method == "POST":
         content = request.POST.get("content")
@@ -31,8 +43,8 @@ def index(request):
         newTweet.save()
         return HttpResponseRedirect(reverse("index"))
 
-    print(tweets, user)
-    return render(request, "network/index.html", {'tweets': tweets, "likes": likes})
+    print(output, user)
+    return render(request, "network/index.html", {'tweets': output})
 
 
 def profile(req, username):

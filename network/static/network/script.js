@@ -6,6 +6,9 @@ likeBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
     fetch("/like/" + id)
       .then((res) => res.json())
-      .then((data) => console.log(data));
+      .then((data) => {
+        console.log(data);
+        window.location.reload();
+      });
   });
 });

@@ -17,28 +17,22 @@
 </form>
 {% if tweets %}
 {% for tweet in tweets %}
-<div class="border p-2 mt-2" data-id="{{tweet.id}}">
-    <h3>Created By {{tweet.user.username}}</h3>
+<div class="border p-2 mt-2" data-id="{{tweet.tweet.id}}">
+    <h3>Created By {{tweet.tweet.user.username}}</h3>
     <p>
-        {{tweet.content}}
+        {{tweet.tweet.content}}
     </p>
-    <p class="text-secondary">Created On {{tweet.created_at}}</p>
+    <p class="text-secondary">Created On {{tweet.tweet.created_at}}</p>
 
+    {{tweet.likes}} <i class="bi bi-suit-heart-fill text-danger me-2"></i>
     {% if user.is_authenticated %}
-    {% for like in likes %}
-
-    {% if like.tweet == tweet and like.user == user %}
-
-    <i class="bi bi-suit-heart-fill text-danger"></i><button class="bg-secondary like-btn">Dislike</button>
-
+    {% if tweet.isLiked %}
+    <button class="like-btn btn btn-primary">Dislike</button>
     {% else %}
 
-    <i class="bi bi-suit-heart-fill"></i><button class="bg-secondary like-btn">like</button>
+    <button class="like-btn btn btn-primary">Like</button>
 
     {% endif %}
-
-
-    {% endfor %}
     {% endif %}
 
 </div>
