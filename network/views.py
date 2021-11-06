@@ -11,7 +11,6 @@ def index(request):
     tweets = Tweet.objects.all().order_by("-created_at").all()
     likes = Likes.objects.all()
 
-    print(likes)
     try:
         user = User.objects.get(username=request.user)
     except:
@@ -34,25 +33,60 @@ def index(request):
     if request.method == "POST":
         content = request.POST.get("content")
         if not user:
-            print("Not a user!")
             return render(request,
-                          "network/index.html", {"tweets": tweets,
+                          "network/index.html", {"tweets": output,
                                                  "msg": "You Should Be logged in to create a post"})
-
+        if not content:
+            return render(request,
+                          "network/index.html", {"tweets": output,
+                                                 "msg": "Tweet can't be Empty"})
         newTweet = Tweet.objects.create(content=content, user=user)
         newTweet.save()
         return HttpResponseRedirect(reverse("index"))
 
-    print(output, user)
     return render(request, "network/index.html", {'tweets': output})
 
 
 def profile(req, username):
-    return HttpResponse({"res": "Hello world! Profile page"})
+
+    try:
+        user = User.objects.get(username=username)
+
+        profile = Profile.objects.get(user=user)
+        tweets = Tweet.objects.filter(user=user)
+        followed = profile.followers.get(user=user)
+
+        print(f'followed {followed} username {req.user.username}')
+        output = {
+            "id": profile.id,
+            "user": user,
+            "tweets": tweets,
+            "followed": followed,
+            "followers": profile.followers.all().count(),
+            "followings": profile.following.all().count()
+        }
+
+        print(output)
+
+        return render(req, "network/profile.html", {"output": output})
+    except:
+        return render(req, "network/profile.html", {"msg": "User Not Exist"})
 
 
 def follow(req, userid):
-    return HttpResponse({"res": "Hello world! Follow page"})
+
+    try:
+        user = User.objects.get(pk=userid)
+        profile = Profile.objects.get(user=user)
+
+        if profile.following.get(user=user):
+            profile.following.remove(user)
+            return HttpResponse({"msg": f"You Unfollowed {user.username} ! "})
+
+        profile.following.add(user)
+        return HttpResponse({"msg": f"You followed {user.username} !"})
+    except:
+        return HttpResponse({"err": "something wrong"})
 
 
 def like(req, tweetid):
@@ -119,7 +153,9 @@ def register(request):
         # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
+            profile = Profile.objects.create(user=user)
             user.save()
+            profile.save()
         except IntegrityError:
             return render(request, "network/register.html", {
                 "message": "Username already taken."
