@@ -37,6 +37,33 @@
 
 </div>
 {% endfor %}
+
+<nav aria-label="Page navigation float-end">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{page_obj.previous_page_number}}">Previous</a></li>
+        {% endif %}
+
+        {% with ''|center:page_obj.paginator.num_pages as range %}
+        {% for _ in range %}
+
+        {% if forloop.counter == page_obj.number %}
+        <li class="page-item disabled"><a aria-disabled="true" class="page-link bg-secondary text-light"
+                href="?page={{forloop.counter}}">
+                {{forloop.counter}}</a></li>
+        {% else %}
+        <li class="page-item"><a class="page-link" href="?page={{forloop.counter}}">
+                {{forloop.counter}}</a></li>
+
+        {% endif %}
+        {% endfor %}
+        {% endwith %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
 {% endif %}
 
 

@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
+from django.core.paginator import Paginator
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -11,6 +12,16 @@ def index(request):
     tweets = Tweet.objects.all().order_by("-created_at").all()
     likes = Likes.objects.all()
 
+    tweets = Paginator(tweets, 10)
+
+    page_obj = None
+    try:
+        page_number = request.GET.get('page')
+        page_obj = tweets.get_page(page_number)
+
+    except:
+        page_obj = tweets.get_page(1)
+
     try:
         user = User.objects.get(username=request.user)
     except:
@@ -18,13 +29,14 @@ def index(request):
 
     output = []
 
-    for tweet in tweets:
+    for tweet in page_obj:
         liked = ""
         try:
             liked = likes.get(user=user, tweet=tweet)
         except:
             liked = None
         output.append({
+            "id": tweet.id,
             "tweet": tweet,
             "likes": likes.filter(tweet=tweet).count(),
             "isLiked": True if liked else False
@@ -34,7 +46,7 @@ def index(request):
         content = request.POST.get("content")
         if not user:
             return render(request,
-                          "network/index.html", {"tweets": output,
+                          "network/index.html", {"tweets": output, "page_obj": page_obj,
                                                  "msg": "You Should Be logged in to create a post"})
         if not content:
             return render(request,
@@ -44,7 +56,7 @@ def index(request):
         newTweet.save()
         return HttpResponseRedirect(reverse("index"))
 
-    return render(request, "network/index.html", {'tweets': output})
+    return render(request, "network/index.html", {'tweets': output, "page_obj": page_obj, })
 
 
 def profile(req, username):
@@ -54,19 +66,24 @@ def profile(req, username):
 
         profile = Profile.objects.get(user=user)
         tweets = Tweet.objects.filter(user=user)
-        followed = profile.followers.get(user=user)
 
-        print(f'followed {followed} username {req.user.username}')
+        tweets = Paginator(tweets, 10)
+
+        page_obj = None
+        try:
+            page_number = req.GET.get('page')
+            page_obj = tweets.get_page(page_number)
+        except:
+            page_obj = tweets.get_page(1)
+
         output = {
             "id": profile.id,
             "user": user,
-            "tweets": tweets,
-            "followed": followed,
+            "count": tweets.count,
+            "tweets": page_obj,
             "followers": profile.followers.all().count(),
             "followings": profile.following.all().count()
         }
-
-        print(output)
 
         return render(req, "network/profile.html", {"output": output})
     except:
@@ -110,6 +127,10 @@ def like(req, tweetid):
         return JsonResponse({"Success": "Liked Succussfully"}, status=200)
 
     return JsonResponse({"error": "You're Not Logged In!"}, status=400)
+
+
+def tweet(req, tweetid):
+    pass
 
 
 def login_view(request):
