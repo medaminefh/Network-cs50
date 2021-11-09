@@ -69,6 +69,17 @@ def profile(req, username):
 
         tweets = Paginator(tweets, 10)
 
+        isFollowed = None
+        if req.user.is_authenticated and req.user != user:
+            if not profile.followers.all():
+                isFollowed = None
+            else:
+                for follower in profile.following.all():
+                    isFollowed = follower == req.user
+                    #print(follower, follower == req.user)
+
+        print(isFollowed)
+
         page_obj = None
         try:
             page_number = req.GET.get('page')
@@ -79,6 +90,7 @@ def profile(req, username):
         output = {
             "id": profile.id,
             "user": user,
+            "isFollowed": isFollowed,
             "count": tweets.count,
             "tweets": page_obj,
             "followers": profile.followers.all().count(),
@@ -92,18 +104,27 @@ def profile(req, username):
 
 def follow(req, userid):
 
-    try:
-        user = User.objects.get(pk=userid)
-        profile = Profile.objects.get(user=user)
+    if req.user.is_authenticated:
+        try:
+            user = User.objects.get(pk=userid)
 
-        if profile.following.get(user=user):
-            profile.following.remove(user)
-            return HttpResponse({"msg": f"You Unfollowed {user.username} ! "})
+            if req.user != user:
+                profile = Profile.objects.get(user=user)
+                # the profile of the logged in user
+                userProfile = Profile.objects.get(user=req.user)
 
-        profile.following.add(user)
-        return HttpResponse({"msg": f"You followed {user.username} !"})
-    except:
-        return HttpResponse({"err": "something wrong"})
+                for following in userProfile.following.all():
+                    if following.user == user:
+                        userProfile.following.remove(user)
+                        profile.followers.remove(req.user)
+                        return JsonResponse({"msg": f"You Unfollowed {user.username} ! "}, status=200)
+
+                    following.following.add(user)
+                    profile.followers.add(req.user)
+                    return JsonResponse({"msg": f"You followed {user.username} ! "}, status=200)
+        except:
+            return JsonResponse({"err": "something wrong"})
+    return JsonResponse({"err": "You must be Logged in"})
 
 
 def like(req, tweetid):

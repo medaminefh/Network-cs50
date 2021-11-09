@@ -25,9 +25,15 @@
                 </div>
             </div>
             <div class="bg-light p-4 d-flex justify-content-end text-center">
-                <ul class="list-inline mb-0">
+                <ul data-id="{{output.user.id}}" class="list-inline mb-0">
                     {% if user.is_authenticated and user != output.user %}
-                    <button class="btn btn-primary">Follow</button>
+                    {% if output.isFollowed != None %}
+                    {% if output.isFollowed == False %}
+                    <button id="follow" class="btn btn-primary">Follow</button>
+                    {% else %}
+                    <button id="follow" class="btn btn-primary">UnFollow</button>
+                    {% endif %}
+                    {% endif %}
                     {% endif %}
                     {% if output.followers > 0 %}
                     <li class="list-inline-item">
@@ -120,4 +126,8 @@
     {% endif %}
 </div>
 
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'network/profile.js' %}"></script>
 {% endblock %}
