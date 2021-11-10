@@ -39,4 +39,4 @@ class Profile(models.Model):
         User, blank=True, related_name="following")
 
     def __str__(self):
-        return f"This is {self.user.username}"
+        return f"Intro: This is {self.user.username},Followers: {self.followers.all()},Following: {self.following.all()}"

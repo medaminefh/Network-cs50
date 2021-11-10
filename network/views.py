@@ -1,7 +1,9 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.core.paginator import Paginator
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -43,20 +45,23 @@ def index(request):
         })
 
     if request.method == "POST":
+
+        # Find a way to not sending all the Page_obj TODO
+
         content = request.POST.get("content")
         if not user:
             return render(request,
-                          "network/index.html", {"tweets": output, "page_obj": page_obj,
-                                                 "msg": "You Should Be logged in to create a post"})
+                          "network/index.html", {"tweets": output,
+                                                 "msg": "You Should Be logged in to create a post", "page_obj": page_obj})
         if not content:
             return render(request,
                           "network/index.html", {"tweets": output,
-                                                 "msg": "Tweet can't be Empty"})
+                                                 "msg": "Tweet can't be Empty", "page_obj": page_obj})
         newTweet = Tweet.objects.create(content=content, user=user)
         newTweet.save()
         return HttpResponseRedirect(reverse("index"))
 
-    return render(request, "network/index.html", {'tweets': output, "page_obj": page_obj, })
+    return render(request, "network/index.html", {"tweets": output, "page_obj": page_obj})
 
 
 def profile(req, username):
@@ -65,20 +70,23 @@ def profile(req, username):
         user = User.objects.get(username=username)
 
         profile = Profile.objects.get(user=user)
-        tweets = Tweet.objects.filter(user=user)
+        tweets = Tweet.objects.filter(user=user).order_by('id')
 
         tweets = Paginator(tweets, 10)
 
         isFollowed = None
-        if req.user.is_authenticated and req.user != user:
-            if not profile.followers.all():
-                isFollowed = None
-            else:
-                for follower in profile.following.all():
-                    isFollowed = follower == req.user
-                    #print(follower, follower == req.user)
 
-        print(isFollowed)
+        if req.user.is_authenticated and req.user != user:
+            print("I'm authenticated!")
+            if len(profile.followers.all()) == 0:
+                isFollowed = False
+            else:
+
+                for follower in profile.followers.all():
+                    if follower == req.user:
+                        isFollowed = True
+                    else:
+                        isFollowed = False
 
         page_obj = None
         try:
@@ -96,35 +104,37 @@ def profile(req, username):
             "followers": profile.followers.all().count(),
             "followings": profile.following.all().count()
         }
+        print(output)
 
         return render(req, "network/profile.html", {"output": output})
     except:
         return render(req, "network/profile.html", {"msg": "User Not Exist"})
 
 
+@login_required(login_url="/index")
 def follow(req, userid):
 
-    if req.user.is_authenticated:
-        try:
-            user = User.objects.get(pk=userid)
+    try:
+        user = User.objects.get(pk=userid)
 
-            if req.user != user:
-                profile = Profile.objects.get(user=user)
-                # the profile of the logged in user
-                userProfile = Profile.objects.get(user=req.user)
+        if req.user != user:
+            profile = Profile.objects.get(user=user)
+            # the profile of the logged in user
+            userProfile = Profile.objects.get(user=req.user)
 
-                for following in userProfile.following.all():
-                    if following.user == user:
-                        userProfile.following.remove(user)
-                        profile.followers.remove(req.user)
-                        return JsonResponse({"msg": f"You Unfollowed {user.username} ! "}, status=200)
+            print(userProfile, user)
+            for following in userProfile.following.all():
+                if following == user:
+                    userProfile.following.remove(user)
+                    profile.followers.remove(req.user)
+                    return JsonResponse({"msg": f"You Unfollowed {user.username} ! "}, status=200)
 
-                    following.following.add(user)
-                    profile.followers.add(req.user)
-                    return JsonResponse({"msg": f"You followed {user.username} ! "}, status=200)
-        except:
-            return JsonResponse({"err": "something wrong"})
-    return JsonResponse({"err": "You must be Logged in"})
+                following.following.add(user)
+                profile.followers.add(req.user)
+                return JsonResponse({"msg": f"You followed {user.username} ! "}, status=200)
+    except Exception as e:
+        print("error in Following:", e)
+        return JsonResponse({"err": "something wrong"})
 
 
 def like(req, tweetid):
