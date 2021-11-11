@@ -1,0 +1,17 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+
+
+<div>
+    {% for following in followings %}
+    <h2>{{ following.username }}</h2>
+    {% if user.is_authenticated %}
+    <button class="btn btn-primary">UnFollow</button>
+    {% endif %}
+    {% endfor%}
+
+</div>
+
+{% endblock %}

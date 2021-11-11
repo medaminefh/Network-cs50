@@ -29,40 +29,46 @@
                     {% if user.is_authenticated and user != output.user %}
                     {% if output.isFollowed != None %}
                     {% if output.isFollowed == False %}
+
                     <button id="follow" class="btn btn-primary">Follow</button>
+
                     {% else %}
+
                     <button id="follow" class="btn btn-primary">UnFollow</button>
+
                     {% endif %}
                     {% endif %}
                     {% endif %}
-                    {% if output.followers > 0 %}
+                    {% if output.followersCount > 0 %}
                     <li class="list-inline-item">
-                        <h5 class="font-weight-bold mb-0 d-block">{{output.followers}}</h5>
-                        <a href="#">
+                        <h5 class="font-weight-bold mb-0 d-block">{{output.followersCount}}</h5>
+                        <a href="{% url 'followers' output.user.id %}">
                             <small class="text-muted"><i class="bi bi-person-fill"></i>Followers</small>
 
                         </a>
                     </li>
                     {% else %}
                     <li class="list-inline-item">
-                        <h5 class="font-weight-bold mb-0 d-block">{{output.followers}}</h5>
+                        <h5 class="font-weight-bold mb-0 d-block">{{output.followersCount}}</h5>
                         <small class="text-muted"> <i class="bi bi-person-fill"></i>Followers</small>
                     </li>
                     {% endif %}
 
-                    {% if output.followings > 0 %}
+                    {% if output.followingsCount > 0 %}
                     <li class="list-inline-item">
-                        <h5 class="font-weight-bold mb-0 d-block">{{output.followings}}</h5>
-                        <a href="#">
+                        <h5 class="font-weight-bold mb-0 d-block">{{output.followingsCount}}</h5>
+                        <a href="{% url 'followings' output.user.id %}">
                             <small class="text-muted">
                                 <i class="bi bi-person-fill"></i>Following</small>
 
                         </a>
                     </li>
 
+
                     {% else %}
                     <li class="list-inline-item">
-                        <h5 class="font-weight-bold mb-0 d-block">{{output.followings}}</h5><small class="text-muted">
+                        <h5 class="font-weight-bold mb-0 d-block">{{output.followingsCount}}</h5><small
+                            class="text-muted">
                             <i class="bi bi-person-fill"></i>Following</small>
                     </li>
                     {% endif %}

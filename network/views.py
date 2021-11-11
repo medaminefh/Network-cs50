@@ -78,15 +78,11 @@ def profile(req, username):
 
         if req.user.is_authenticated and req.user != user:
             print("I'm authenticated!")
-            if len(profile.followers.all()) == 0:
-                isFollowed = False
-            else:
 
-                for follower in profile.followers.all():
-                    if follower == req.user:
-                        isFollowed = True
-                    else:
-                        isFollowed = False
+            if req.user in profile.followers.all():
+                isFollowed = True
+            else:
+                isFollowed = False
 
         page_obj = None
         try:
@@ -101,14 +97,38 @@ def profile(req, username):
             "isFollowed": isFollowed,
             "count": tweets.count,
             "tweets": page_obj,
-            "followers": profile.followers.all().count(),
-            "followings": profile.following.all().count()
+            "followersCount": profile.followers.all().count(),
+            "followingsCount": profile.following.all().count(),
+            "followers": profile.followers.all(),
+            "followings": profile.following.all()
         }
         print(output)
 
         return render(req, "network/profile.html", {"output": output})
     except:
         return render(req, "network/profile.html", {"msg": "User Not Exist"})
+
+
+def followers(req, userid):
+    try:
+        profile = Profile.objects.get(user=User.objects.get(pk=userid))
+
+        return render(req, "network/followers.html", {"followers": profile.followers.all()})
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({"err": "There is something wrong!"}, safe=False)
+
+
+def followings(req, userid):
+    try:
+        profile = Profile.objects.get(user=User.objects.get(pk=userid))
+
+        return render(req, "network/followings.html", {"followings": profile.following.all()})
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({"err": "There is something wrong!"}, safe=False)
 
 
 @login_required(login_url="/index")
@@ -123,15 +143,16 @@ def follow(req, userid):
             userProfile = Profile.objects.get(user=req.user)
 
             print(userProfile, user)
-            for following in userProfile.following.all():
-                if following == user:
-                    userProfile.following.remove(user)
-                    profile.followers.remove(req.user)
-                    return JsonResponse({"msg": f"You Unfollowed {user.username} ! "}, status=200)
 
-                following.following.add(user)
+            if user in userProfile.following.all():
+                userProfile.following.remove(user)
+                profile.followers.remove(req.user)
+                return JsonResponse({"msg": f"You Unfollowed {user.username} ! "}, status=200)
+            else:
+                userProfile.following.add(user)
                 profile.followers.add(req.user)
                 return JsonResponse({"msg": f"You followed {user.username} ! "}, status=200)
+
     except Exception as e:
         print("error in Following:", e)
         return JsonResponse({"err": "something wrong"})

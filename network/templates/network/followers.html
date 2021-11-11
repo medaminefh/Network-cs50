@@ -1,0 +1,17 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+
+
+<div class="d-flex">
+    {% for follower in followers %}
+    <h2>{{ follower.username }}</h2>
+    {% if user.is_authenticated %}
+    <button class="ml-2 btn btn-primary">Remove</button>
+    {% endif %}
+    {% endfor%}
+
+</div>
+
+{% endblock %}
