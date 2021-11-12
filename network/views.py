@@ -1,3 +1,4 @@
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.core.paginator import Paginator
@@ -70,7 +71,7 @@ def profile(req, username):
         user = User.objects.get(username=username)
 
         profile = Profile.objects.get(user=user)
-        tweets = Tweet.objects.filter(user=user).order_by('id')
+        tweets = Tweet.objects.filter(user=user).order_by("-created_at")
 
         tweets = Paginator(tweets, 10)
 
@@ -181,8 +182,22 @@ def like(req, tweetid):
     return JsonResponse({"error": "You're Not Logged In!"}, status=400)
 
 
+@login_required(login_url="/index")
 def tweet(req, tweetid):
-    pass
+    try:
+        if req.method == "PUT":
+
+            tweet = Tweet.objects.get(pk=tweetid)
+            content = req.PUT.get("content")
+
+            if content:
+                tweet.content = content
+                tweet.save(update_fields=["content"])
+                return JsonResponse({"msg": f"Tweet {tweetid} is modified!"})
+        return JsonResponse({"error": "PUT reqs only!"})
+    except Exception as e:
+        print(e)
+        return JsonResponse({"error": "Something went wrong with editing Post"})
 
 
 def login_view(request):
@@ -237,3 +252,44 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+
+@login_required(login_url="/index")
+def followingspost(req, userid):
+    try:
+        user = req.user
+        followings = Profile.objects.get(user=user).following.all()
+
+        tweets = Tweet.objects.filter(
+            user__in=followings).order_by("-created_at").all()
+        likes = Likes.objects.filter(tweet__in=tweets)
+
+        tweets = Paginator(tweets, 10)
+
+        page_obj = None
+        try:
+            page_number = req.GET.get('page')
+            page_obj = tweets.get_page(page_number)
+
+        except:
+            page_obj = tweets.get_page(1)
+
+        output = []
+
+        for tweet in page_obj:
+            liked = ""
+            try:
+                liked = likes.get(user=user, tweet=tweet)
+            except:
+                liked = None
+            output.append({
+                "id": tweet.id,
+                "tweet": tweet,
+                "likes": likes.filter(tweet=tweet).count(),
+                "isLiked": True if liked else False
+            })
+        return render(req, "network/followingstweets.html", {"tweets": output, "page_obj": page_obj})
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({"error": "Something went wrong!"})

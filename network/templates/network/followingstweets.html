@@ -5,33 +5,8 @@
 {% if msg %}
 <h5 class="text-danger">{{msg}}</h5>
 {% endif %}
-
-<form class="mt-2 mb-4" action="{% url 'index' %}" method="post">
-    {% csrf_token %}
-    <div class="form-group">
-        <textarea autofocus class="form-control" type="text" name="content" placeholder="Content"></textarea>
-    </div>
-    <button class="btn btn-primary" type="submit">
-        Create
-    </button>
-</form>
 {% if tweets %}
 {% for tweet in tweets %}
-
-{% if user == tweet.tweet.user %}
-<div class="{{tweet.tweet.id}} editting " data-id="{{tweet.tweet.id}}">
-    <div>
-        <div class="form-group">
-            <textarea autofocus class="form-control" type="text" name="content"
-                placeholder="Content">{{tweet.tweet.content}}</textarea>
-        </div>
-        <button class="btn btn-primary">
-            Save
-        </button>
-    </div>
-
-</div>
-{% endif %}
 
 <div class="content border p-2 mt-2" data-id="{{tweet.tweet.id}}">
     <h3>Created By <a href="{% url 'profile' tweet.tweet.user.username %}"> {{tweet.tweet.user.username}} </a> </h3>
@@ -90,5 +65,4 @@
 {% endblock %}
 
 {% block script %}
-<script src="{% static 'network/script.js' %}"></script>
 {% endblock %}
