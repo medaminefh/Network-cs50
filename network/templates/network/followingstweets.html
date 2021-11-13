@@ -58,6 +58,8 @@
         {% endif %}
     </ul>
 </nav>
+{% else %}
+<h2 class="text-center">There is No Tweets from whom you follow</h2>
 {% endif %}
 
 
@@ -65,4 +67,5 @@
 {% endblock %}
 
 {% block script %}
+<script src="{% static 'network/script.js' %}"></script>
 {% endblock %}

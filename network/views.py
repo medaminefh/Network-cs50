@@ -53,7 +53,7 @@ def index(request):
         if not user:
             return render(request,
                           "network/index.html", {"tweets": output,
-                                                 "msg": "You Should Be logged in to create a post", "page_obj": page_obj})
+                                                 "msg": "You Should Be logged in to create a Tweet", "page_obj": page_obj})
         if not content:
             return render(request,
                           "network/index.html", {"tweets": output,
@@ -78,7 +78,6 @@ def profile(req, username):
         isFollowed = None
 
         if req.user.is_authenticated and req.user != user:
-            print("I'm authenticated!")
 
             if req.user in profile.followers.all():
                 isFollowed = True
@@ -103,7 +102,6 @@ def profile(req, username):
             "followers": profile.followers.all(),
             "followings": profile.following.all()
         }
-        print(output)
 
         return render(req, "network/profile.html", {"output": output})
     except:
@@ -142,8 +140,6 @@ def follow(req, userid):
             profile = Profile.objects.get(user=user)
             # the profile of the logged in user
             userProfile = Profile.objects.get(user=req.user)
-
-            print(userProfile, user)
 
             if user in userProfile.following.all():
                 userProfile.following.remove(user)
@@ -255,7 +251,7 @@ def register(request):
 
 
 @login_required(login_url="/index")
-def followingspost(req, userid):
+def followingsposts(req):
     try:
         user = req.user
         followings = Profile.objects.get(user=user).following.all()
