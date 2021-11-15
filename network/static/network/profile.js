@@ -15,14 +15,29 @@ function getCookie(cname) {
   return "";
 }
 
+const header = (cookie) => ({
+  Accept: "application/json, text/plain, */*",
+  "Content-Type": "application/json",
+  "X-CSRFToken": cookie,
+});
+
 if (followBtn) {
   followBtn.addEventListener("click", function () {
+    const cookie = getCookie("csrftoken");
+
     const id = this.parentElement.dataset.id;
-    fetch("/user/" + id)
+    fetch("/user/" + id, { method: "PUT", headers: header(cookie) })
       .then((res) => res.json())
       .then((data) => {
         console.log(data);
-        window.location.reload();
+        if (data.msg.toLowerCase().includes("you followed")) {
+          followBtn.parentElement.querySelector(".followers").innerText =
+            +followBtn.parentElement.querySelector(".followers").innerText + 1;
+        } else {
+          followBtn.parentElement.querySelector(".followers").innerText =
+            +followBtn.parentElement.querySelector(".followers").innerText - 1;
+        }
+        //window.location.reload();
       })
       .catch((err) => {
         console.log(err);

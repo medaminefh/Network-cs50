@@ -135,51 +135,54 @@ def followings(req, userid):
 @login_required(login_url="/index")
 def follow(req, userid):
 
-    try:
-        user = User.objects.get(pk=userid)
+    if(req.method == "PUT"):
 
-        if req.user != user:
-            profile = Profile.objects.get(user=user)
-            # the profile of the logged in user
-            userProfile = Profile.objects.get(user=req.user)
+        try:
+            user = User.objects.get(pk=userid)
 
-            print(userProfile, user)
+            if req.user != user:
+                profile = Profile.objects.get(user=user)
+                # the profile of the logged in user
+                userProfile = Profile.objects.get(user=req.user)
 
-            if user in userProfile.following.all():
-                userProfile.following.remove(user)
-                profile.followers.remove(req.user)
-                return JsonResponse({"msg": f"You Unfollowed {user.username} ! "}, status=200)
-            else:
-                userProfile.following.add(user)
-                profile.followers.add(req.user)
-                return JsonResponse({"msg": f"You followed {user.username} ! "}, status=200)
+                print(userProfile, user)
 
-    except Exception as e:
-        print("error in Following:", e)
-        return JsonResponse({"err": "something wrong"})
+                if user in userProfile.following.all():
+                    userProfile.following.remove(user)
+                    profile.followers.remove(req.user)
+                    return JsonResponse({"msg": f"You Unfollowed {user.username} ! "}, status=200)
+                else:
+                    userProfile.following.add(user)
+                    profile.followers.add(req.user)
+                    return JsonResponse({"msg": f"You followed {user.username} ! "}, status=200)
+
+        except Exception as e:
+            print("error in Following:", e)
+            return JsonResponse({"err": "something wrong"})
 
 
 def like(req, tweetid):
+    if(req.method == "PUT"):
 
-    if req.user.is_authenticated:
-        tweet = Tweet.objects.get(pk=tweetid)
-        user = User.objects.get(username=req.user.username)
+        if req.user.is_authenticated:
+            tweet = Tweet.objects.get(pk=tweetid)
+            user = User.objects.get(username=req.user.username)
 
-        try:
-            tweetLiked = Likes.objects.get(tweet=tweet, user=user)
-        except:
-            tweetLiked = None
+            try:
+                tweetLiked = Likes.objects.get(tweet=tweet, user=user)
+            except:
+                tweetLiked = None
 
-        if tweetLiked:
-            tweetLiked.delete()
-            return JsonResponse({"Success": "Disliked"}, status=200)
+            if tweetLiked:
+                tweetLiked.delete()
+                return JsonResponse({"Success": "Disliked"}, status=200)
 
-        tweetLiked = Likes.objects.create(user=user, tweet=tweet)
-        tweetLiked.save()
+            tweetLiked = Likes.objects.create(user=user, tweet=tweet)
+            tweetLiked.save()
 
-        return JsonResponse({"Success": "Liked Succussfully"}, status=200)
+            return JsonResponse({"Success": "Liked Succussfully"}, status=200)
 
-    return JsonResponse({"error": "You're Not Logged In!"}, status=400)
+        return JsonResponse({"error": "You're Not Logged In!"}, status=400)
 
 
 @login_required(login_url="/index")
@@ -255,7 +258,7 @@ def register(request):
 
 
 @login_required(login_url="/index")
-def followingspost(req, userid):
+def followingspost(req):
     try:
         user = req.user
         followings = Profile.objects.get(user=user).following.all()
