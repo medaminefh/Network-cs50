@@ -61,6 +61,7 @@ if (editBtns) {
           .then((data) => {
             if (!data.error) {
               document.querySelector(".hide_" + id + " h4").innerText = "";
+              document.querySelector(".show_" + id + " p").innerText = content;
               document.querySelector(".hide_" + id).style.display = "none";
               document.querySelector(".show_" + id).style.display = "block";
             } else {
