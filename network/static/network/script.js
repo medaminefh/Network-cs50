@@ -1,22 +1,5 @@
 const likeBtns = document.querySelectorAll(".like-btn");
-const editBtn = document.querySelector(".edit");
-
-if (editBtn) {
-  editBtn.addEventListener("click", function () {
-    const id = this.parentElement.dataset.id;
-    const content = this.parentElement.querySelector("p").innerText;
-
-    console.log("edit", id, content);
-    this.classList.toggle("Show");
-    if (this.classList.contains("Show")) {
-      this.innerText = "Save";
-      this.parentElement.style.display = "none";
-      document.querySelector(`.editting ${id}`).style.display = "block";
-    } else {
-      this.innerText = "Edit";
-    }
-  });
-}
+const editBtns = document.querySelectorAll(".edit");
 
 function getCookie(cname) {
   let name = cname + "=";
@@ -39,11 +22,62 @@ const header = (cookie) => ({
   "X-CSRFToken": cookie,
 });
 
+const cookie = getCookie("csrftoken");
+
+if (editBtns) {
+  editBtns.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const id = this.parentElement.dataset.id;
+      document.querySelector(".hide_" + id).style.display = "block";
+      document.querySelector(".show_" + id).style.display = "none";
+      if (document.querySelector(".hide_" + id + " textarea").value == "") {
+        document.querySelector(".hide_" + id + " textarea").value = document
+          .querySelector(".show_" + id + " p")
+          .innerText.trim();
+      }
+
+      document.querySelector(".return_" + id).addEventListener("click", () => {
+        document.querySelector(".hide_" + id + " h4").innerText = "";
+        if (document.querySelector(".hide_" + id + " textarea").value == "") {
+          document.querySelector(".hide_" + id + " textarea").value = document
+            .querySelector(".show_" + id + " p")
+            .innerText.trim();
+        }
+        document.querySelector(".hide_" + id).style.display = "none";
+        document.querySelector(".show_" + id).style.display = "block";
+      });
+
+      document.querySelector(".save_" + id).addEventListener("click", () => {
+        const content = document.querySelector(
+          ".hide_" + id + " .content"
+        ).value;
+
+        fetch("/tweet/" + id, {
+          method: "PUT",
+          headers: header(cookie),
+          body: JSON.stringify({ content }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.error) {
+              document.querySelector(".hide_" + id + " h4").innerText = "";
+              document.querySelector(".hide_" + id).style.display = "none";
+              document.querySelector(".show_" + id).style.display = "block";
+            } else {
+              document.querySelector(".hide_" + id + " h4").innerText =
+                data.error;
+            }
+          })
+          .catch((err) => console.log(err));
+      });
+    });
+  });
+}
+
 likeBtns.forEach((btn) => {
   const id = btn.parentElement.dataset.id;
 
   btn.addEventListener("click", () => {
-    const cookie = getCookie("csrftoken");
     fetch("/like/" + id, { method: "PUT", headers: header(cookie) })
       .then((res) => res.json())
       .then((data) => {

@@ -19,21 +19,23 @@
 {% for tweet in tweets %}
 
 {% if user == tweet.tweet.user %}
-<div class="{{tweet.tweet.id}} editting " data-id="{{tweet.tweet.id}}">
-    <div>
-        <div class="form-group">
-            <textarea autofocus class="form-control" type="text" name="content"
-                placeholder="Content">{{tweet.tweet.content}}</textarea>
-        </div>
-        <button class="btn btn-primary">
-            Save
-        </button>
+<div class="p-5 mt-2 mb-4 hide hide_{{tweet.tweet.id}}" data-id="{{tweet.tweet.id}}">
+    <h4 class="error text-danger"></h4>
+    <div class="form-group">
+        <textarea autofocus class="form-control content" type="text" name="content"
+            placeholder="Content">{{tweet.tweet.content}}</textarea>
     </div>
+    <button class="btn btn-secondary return_{{tweet.tweet.id}}">
+        Return
+    </button>
 
+    <button class="btn btn-primary save_{{tweet.tweet.id}}">
+        Save
+    </button>
 </div>
 {% endif %}
 
-<div class="content border p-2 mt-2" data-id="{{tweet.tweet.id}}">
+<div class="content border p-2 mt-2 show_{{tweet.tweet.id}}" data-id="{{tweet.tweet.id}}">
     <h3>Created By <a href="{% url 'profile' tweet.tweet.user.username %}"> {{tweet.tweet.user.username}} </a> </h3>
     <p>
         {{tweet.tweet.content}}

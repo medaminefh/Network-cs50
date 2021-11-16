@@ -13,7 +13,10 @@
   transition: 0.5s ease-out;
 }
 
-.content {
+.hide {
+  display: none;
+}
+
+.show {
   display: block;
-  transition: 0.5s ease-in;
 }

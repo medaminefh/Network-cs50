@@ -185,9 +185,12 @@ def like(req, tweetid):
 def tweet(req, tweetid):
     try:
         if req.method == "PUT":
-
+            body_unicode = req.body.decode('utf-8')
+            body = json.loads(body_unicode)
+            content = body['content']
+            if not content:
+                return JsonResponse({"error": "Tweet Can't be Empty!"})
             tweet = Tweet.objects.get(pk=tweetid)
-            content = req.PUT.get("content")
 
             if content:
                 tweet.content = content
