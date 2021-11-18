@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, Client, client
 from .models import Likes, Tweet, Profile, User
 
 # Create your tests here.
@@ -7,44 +7,57 @@ from .models import Likes, Tweet, Profile, User
 
 class UsersManagersTests(TestCase):
 
-    def test_create_user(self):
-        User = get_user_model()
-        user = User.objects.create_user(
-            username='normal@user.com', password='foo')
-        self.assertEqual(user.username, 'normal@user.com')
-        self.assertTrue(user.is_active)
-        self.assertFalse(user.is_staff)
-        self.assertFalse(user.is_superuser)
+    # Run This function before any test, Basically we'll create users, and posts
+    # setUp function is a special fn in Django, it's work is to run some things before any Test runs
+    def setUp(self):
+        # create users and their profiles
+        user1 = User.objects.create(username="med", password="123456")
+        profile1 = Profile.objects.create(user=user1)
 
-        with self.assertRaises(TypeError):
-            User.objects.create_user()
-        with self.assertRaises(ValueError):
-            User.objects.create_user(username="")
-        with self.assertRaises(ValueError):
-            User.objects.create_user(username='', password="foo")
+        user2 = User.objects.create(username="medamine", password="123456")
+        profile2 = Profile.objects.create(user=user2)
 
-    def test_create_superuser(self):
-        User = get_user_model()
-        admin_user = User.objects.create_superuser(
-            username='super@user.com', password='foo')
-        self.assertEqual(admin_user.username, 'super@user.com')
-        self.assertTrue(admin_user.is_active)
-        self.assertTrue(admin_user.is_staff)
-        self.assertTrue(admin_user.is_superuser)
+        user3 = User.objects.create(username="haroun", password="19971997Am")
+        profile3 = Profile.objects.create(user=user3)
 
-    def test_create_tweet(self):
-        user1 = User.objects.create(username="med")
-        user2 = User.objects.create(username="haroun")
-        user3 = User.objects.create(username="amira")
+        tweet1 = Tweet.objects.create(user=user2, content="Hello world!")
+        tweet2 = Tweet.objects.create(
+            user=user1, content="Hello world from Med1!")
+        tweet3 = Tweet.objects.create(
+            user=user1, content="Hello world from Med2!")
+        tweet4 = Tweet.objects.create(
+            user=user1, content="Hello world from Med3!")
 
-        newTweet1 = Tweet.objects.create(user=user1, content="Hello world!")
-        newTweet2 = Tweet.objects.create(
-            user=user2, content="Hello world! My name is Haroun")
-        newTweet3 = Tweet.objects.create(
-            user=user3, content="Hello world! My name is Amira")
+    def test_users_count(self):
+        users = User.objects.all()
+        """ assert that there is 3 users """
+        self.assertEqual(users.count(), 3)
 
-        self.assertEqual(user1.username, 'med')
-        self.assertEqual(newTweet1.user.username, 'med')
-        self.assertTrue(newTweet2.content, "Hello world! My name is Haroun")
-        self.assertTrue(newTweet3.content, "Hello world! My name is Amira")
-        self.assertTrue(newTweet3.user, "amira")
+        """ assert that there is 3 Profiles """
+        profiles = Profile.objects.all()
+        self.assertEqual(profiles.count(), 3)
+
+    def test_tweet_count(self):
+
+        medTweets = Tweet.objects.filter(user=User.objects.get(username="med"))
+        medamineTweets = Tweet.objects.filter(
+            user=User.objects.get(username="medamine"))
+
+        allTweets = Tweet.objects.all()
+        self.assertEqual(allTweets.count(), 4)
+        self.assertEqual(medTweets.count(), 3)
+        self.assertEqual(medamineTweets.count(), 1)
+
+    def test_followers(self):
+        profile1 = Profile.objects.get(user=User.objects.get(username="med"))
+        profile2 = Profile.objects.get(
+            user=User.objects.get(username="medamine"))
+
+        self.assertEqual(profile1.followers.all().count(), 0)
+        self.assertEqual(profile2.followers.all().count(), 0)
+
+    def test_index(self):
+        client = Client()
+        response = client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["tweets"]), 4)
