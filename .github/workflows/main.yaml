@@ -9,4 +9,4 @@ jobs:
       - name: Run Django Unit Tests
         run: |
           pip3 install --user django python-decouple
-          python3 manage.py test
+          python3 script test
