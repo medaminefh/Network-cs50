@@ -1,98 +1,114 @@
-{% extends "network/layout.html" %}
-{% load static %}
-
-{% block body %}
+{% extends "network/layout.html" %} 
+{% load static %} 
+{% block body %} 
 {% if msg %}
 <h5 class="text-danger">{{msg}}</h5>
 {% endif %}
 
 <form class="mt-2 mb-4" action="{% url 'index' %}" method="post">
-    {% csrf_token %}
-    <div class="form-group">
-        <textarea autofocus class="form-control" type="text" name="content" placeholder="Content"></textarea>
-    </div>
-    <button class="btn btn-primary" type="submit">
-        Create
-    </button>
+  {% csrf_token %}
+  <div class="form-group">
+    <textarea
+      autofocus
+      class="form-control"
+      type="text"
+      name="content"
+      placeholder="Content"
+    ></textarea>
+  </div>
+  {% if not user.is_authenticated %}
+  <button class="btn btn-primary" disabled type="submit">Create</button>
+  {% else %}
+  
+  <button class="btn btn-primary" type="submit">Create</button>
+  {% endif %}
 </form>
-{% if tweets %}
-{% for tweet in tweets %}
+{% if tweets %} {% for tweet in tweets %} {% if user == tweet.tweet.user %}
+<div
+  class="p-5 mt-2 mb-4 hide hide_{{tweet.tweet.id}}"
+  data-id="{{tweet.tweet.id}}"
+>
+  <h4 class="error text-danger"></h4>
+  <div class="form-group">
+    <textarea
+      autofocus
+      class="form-control content"
+      type="text"
+      name="content"
+      placeholder="Content"
+    >
+{{tweet.tweet.content}}</textarea
+    >
+  </div>
+  <button class="btn btn-secondary return_{{tweet.tweet.id}}">Return</button>
 
-{% if user == tweet.tweet.user %}
-<div class="p-5 mt-2 mb-4 hide hide_{{tweet.tweet.id}}" data-id="{{tweet.tweet.id}}">
-    <h4 class="error text-danger"></h4>
-    <div class="form-group">
-        <textarea autofocus class="form-control content" type="text" name="content"
-            placeholder="Content">{{tweet.tweet.content}}</textarea>
-    </div>
-    <button class="btn btn-secondary return_{{tweet.tweet.id}}">
-        Return
-    </button>
-
-    <button class="btn btn-primary save_{{tweet.tweet.id}}">
-        Save
-    </button>
+  <button class="btn btn-primary save_{{tweet.tweet.id}}">Save</button>
 </div>
 {% endif %}
 
-<div class="content border p-2 mt-2 show_{{tweet.tweet.id}}" data-id="{{tweet.tweet.id}}">
-    <h3>Created By <a href="{% url 'profile' tweet.tweet.user.username %}"> {{tweet.tweet.user.username}} </a> </h3>
-    <p>
-        {{tweet.tweet.content}}
-    </p>
-    <p class="text-secondary">Created On {{tweet.tweet.created_at}}</p>
+<div
+  class="content border p-2 mt-2 show_{{tweet.tweet.id}}"
+  data-id="{{tweet.tweet.id}}"
+>
+  <h3>
+    Created By
+    <a href="{% url 'profile' tweet.tweet.user.username %}">
+      {{tweet.tweet.user.username}}
+    </a>
+  </h3>
+  <p>{{tweet.tweet.content}}</p>
+  <p class="text-secondary">Created On {{tweet.tweet.created_at}}</p>
 
-    <span>
-        {{tweet.likes}}
-    </span> <i class="bi bi-suit-heart-fill {% if tweet.isLiked %}text-danger{% endif %} me-2"></i>
-    {% if user.is_authenticated %}
-    {% if tweet.isLiked %}
-    <button class="like-btn btn btn-primary">Dislike</button>
-    {% else %}
+  <span> {{tweet.likes}} </span>
+  <i
+    class="bi bi-suit-heart-fill {% if tweet.isLiked %}text-danger{% endif %} me-2"
+  ></i>
+  {% if user.is_authenticated %} {% if tweet.isLiked %}
+  <button class="like-btn btn btn-primary">Dislike</button>
+  {% else %}
 
-    <button class="like-btn btn btn-primary">Like</button>
+  <button class="like-btn btn btn-primary">Like</button>
 
-    {% endif %}
-    {% endif %}
-    {% if user == tweet.tweet.user %}
-    <button class="btn btn-secondary edit">Edit</button>
-    {% endif %}
-
+  {% endif %} {% endif %} {% if user == tweet.tweet.user %}
+  <button class="btn btn-secondary edit">Edit</button>
+  {% endif %}
 </div>
 {% endfor %}
 
 <nav aria-label="Page navigation float-end">
-    <ul class="pagination">
-        {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page={{page_obj.previous_page_number}}">Previous</a></li>
-        {% endif %}
+  <ul class="pagination">
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{page_obj.previous_page_number}}"
+        >Previous</a
+      >
+    </li>
+    {% endif %} 
+    {% with ''|center:page_obj.paginator.num_pages as range %} 
+    {% for _ in range %} {% if forloop.counter == page_obj.number %}
+    <li class="page-item disabled">
+      <a
+        aria-disabled="true"
+        class="page-link bg-secondary text-light"
+        href="?page={{forloop.counter}}"
+      >
+        {{forloop.counter}}</a
+      >
+    </li>
+    {% else %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{forloop.counter}}">
+        {{forloop.counter}}</a
+      >
+    </li>
 
-        {% with ''|center:page_obj.paginator.num_pages as range %}
-        {% for _ in range %}
-
-        {% if forloop.counter == page_obj.number %}
-        <li class="page-item disabled"><a aria-disabled="true" class="page-link bg-secondary text-light"
-                href="?page={{forloop.counter}}">
-                {{forloop.counter}}</a></li>
-        {% else %}
-        <li class="page-item"><a class="page-link" href="?page={{forloop.counter}}">
-                {{forloop.counter}}</a></li>
-
-        {% endif %}
-        {% endfor %}
-        {% endwith %}
-
-        {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{page_obj.next_page_number }}">Next</a></li>
-        {% endif %}
-    </ul>
+    {% endif %} {% endfor %} {% endwith %} {% if page_obj.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{page_obj.next_page_number }}">Next</a>
+    </li>
+    {% endif %}
+  </ul>
 </nav>
-{% endif %}
-
-
-
-{% endblock %}
-
-{% block script %}
+{% endif %} {% endblock %} {% block script %}
 <script src="{% static 'network/script.js' %}"></script>
 {% endblock %}
